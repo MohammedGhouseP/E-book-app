@@ -1,0 +1,31 @@
+name: ebook_app
+description: A Flutter bookshelf reading app with dual-language (English + Urdu) support.
+publish_to: "none"
+version: 1.0.0+1
+
+environment:
+  sdk: ">=3.0.0 <4.0.0"
+  flutter: ">=3.10.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  cupertino_icons: ^1.0.6
+  shared_preferences: ^2.2.2
+  linked_scroll_controller: ^0.2.0
+  provider: ^6.1.1
+  google_fonts: ^6.1.0
+
+dev_dependencies:
+  flutter_lints: ^3.0.0
+
+flutter:
+  uses-material-design: true
+  assets:
+    - assets/books/
+  # To enable proper Nastaliq Urdu rendering, download
+  # NotoNastaliqUrdu-Regular.ttf into assets/fonts/ then uncomment:
+  # fonts:
+  #   - family: NotoNastaliqUrdu
+  #     fonts:
+  #       - asset: assets/fonts/NotoNastaliqUrdu-Regular.ttf
