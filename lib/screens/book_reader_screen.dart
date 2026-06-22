@@ -4,6 +4,7 @@ import '../models/book_model.dart';
 import '../utils/app_theme.dart';
 import '../utils/library_storage.dart';
 import '../widgets/dual_language_reader.dart';
+import '../widgets/manga_reader.dart'; // Imorted our new widget!
 
 class BookReaderScreen extends StatefulWidget {
   final Book book;
@@ -16,13 +17,15 @@ class BookReaderScreen extends StatefulWidget {
 class _BookReaderScreenState extends State<BookReaderScreen> {
   late int _chapterIndex;
   ReaderLayout _layout = ReaderLayout.sideBySide;
-  LanguageMode _langMode = LanguageMode.both;
+  late LanguageMode _langMode;
   bool _initialized = false;
 
   @override
   void initState() {
     super.initState();
     _chapterIndex = 0;
+    // If it's an image book, default to English Only instead of "Both"
+    _langMode = widget.book.isManga ? LanguageMode.englishOnly : LanguageMode.both;
   }
 
   @override
@@ -47,6 +50,8 @@ class _BookReaderScreenState extends State<BookReaderScreen> {
   }
 
   void _showSettings() {
+    if (widget.book.isManga) return; // Hide text settings if it's an image book
+    
     final storage = context.read<LibraryStorage>();
     showModalBottomSheet(
       context: context,
@@ -65,8 +70,7 @@ class _BookReaderScreenState extends State<BookReaderScreen> {
                 children: [
                   const Text(
                     'Reader Settings',
-                    style:
-                        TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
                   ),
                   const SizedBox(height: 16),
                   Row(
@@ -122,11 +126,19 @@ class _BookReaderScreenState extends State<BookReaderScreen> {
 
   void _cycleLanguageMode() {
     setState(() {
-      _langMode = switch (_langMode) {
-        LanguageMode.both => LanguageMode.englishOnly,
-        LanguageMode.englishOnly => LanguageMode.urduOnly,
-        LanguageMode.urduOnly => LanguageMode.both,
-      };
+      if (widget.book.isManga) {
+        // Image books only toggle between English Image and Urdu Image
+        _langMode = _langMode == LanguageMode.urduOnly
+            ? LanguageMode.englishOnly
+            : LanguageMode.urduOnly;
+      } else {
+        // Text books keep the original 3-way toggle
+        _langMode = switch (_langMode) {
+          LanguageMode.both => LanguageMode.englishOnly,
+          LanguageMode.englishOnly => LanguageMode.urduOnly,
+          LanguageMode.urduOnly => LanguageMode.both,
+        };
+      }
     });
   }
 
@@ -136,11 +148,18 @@ class _BookReaderScreenState extends State<BookReaderScreen> {
         LanguageMode.urduOnly => Icons.language,
       };
 
-  String _langTooltip() => switch (_langMode) {
-        LanguageMode.both => 'Showing both — tap for English only',
-        LanguageMode.englishOnly => 'English only — tap for Urdu only',
-        LanguageMode.urduOnly => 'Urdu only — tap for both',
-      };
+  String _langTooltip() {
+    if (widget.book.isManga) {
+      return _langMode == LanguageMode.englishOnly 
+          ? 'Showing English — Tap for Urdu' 
+          : 'Showing Urdu — Tap for English';
+    }
+    return switch (_langMode) {
+      LanguageMode.both => 'Showing both — tap for English only',
+      LanguageMode.englishOnly => 'English only — tap for Urdu only',
+      LanguageMode.urduOnly => 'Urdu only — tap for both',
+    };
+  }
 
   Widget _buildDrawer(BuildContext context) {
     return Drawer(
@@ -154,8 +173,7 @@ class _BookReaderScreenState extends State<BookReaderScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   const Text('Table of Contents',
-                      style: TextStyle(
-                          fontSize: 18, fontWeight: FontWeight.w700)),
+                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700)),
                   const SizedBox(height: 4),
                   Text(
                     widget.book.title,
@@ -176,16 +194,14 @@ class _BookReaderScreenState extends State<BookReaderScreen> {
                   final selected = i == _chapterIndex;
                   return ListTile(
                     leading: CircleAvatar(
-                      backgroundColor:
-                          selected ? AppColors.gold : AppColors.wood,
+                      backgroundColor: selected ? AppColors.gold : AppColors.wood,
                       foregroundColor: AppColors.cream,
                       child: Text('${i + 1}'),
                     ),
                     title: Text(
                       ch.title,
                       style: TextStyle(
-                        fontWeight:
-                            selected ? FontWeight.w700 : FontWeight.w500,
+                        fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
                       ),
                     ),
                     selected: selected,
@@ -215,62 +231,70 @@ class _BookReaderScreenState extends State<BookReaderScreen> {
       appBar: AppBar(
         title: Text(book.title, overflow: TextOverflow.ellipsis),
         actions: [
-          IconButton(
-            tooltip: 'Decrease font',
-            icon: const Icon(Icons.text_decrease),
-            onPressed: () => storage.setFontSize(storage.fontSize - 1),
-          ),
-          IconButton(
-            tooltip: 'Increase font',
-            icon: const Icon(Icons.text_increase),
-            onPressed: () => storage.setFontSize(storage.fontSize + 1),
-          ),
+          if (!book.isManga) ...[
+            IconButton(
+              tooltip: 'Decrease font',
+              icon: const Icon(Icons.text_decrease),
+              onPressed: () => storage.setFontSize(storage.fontSize - 1),
+            ),
+            IconButton(
+              tooltip: 'Increase font',
+              icon: const Icon(Icons.text_increase),
+              onPressed: () => storage.setFontSize(storage.fontSize + 1),
+            ),
+          ],
           IconButton(
             tooltip: isFav ? 'Remove bookmark' : 'Bookmark',
             icon: Icon(isFav ? Icons.bookmark : Icons.bookmark_border),
             onPressed: () => storage.toggleFavorite(book.id),
           ),
-          PopupMenuButton<ReaderLayout>(
-            tooltip: 'Layout',
-            icon: const Icon(Icons.view_compact_alt),
-            onSelected: (v) => setState(() => _layout = v),
-            itemBuilder: (_) => [
-              CheckedPopupMenuItem(
-                value: ReaderLayout.sideBySide,
-                checked: _layout == ReaderLayout.sideBySide,
-                child: const Text('Side by Side'),
-              ),
-              CheckedPopupMenuItem(
-                value: ReaderLayout.tabbed,
-                checked: _layout == ReaderLayout.tabbed,
-                child: const Text('Tabbed'),
-              ),
-            ],
-          ),
-          IconButton(
-            tooltip: 'Reader settings',
-            icon: const Icon(Icons.tune),
-            onPressed: _showSettings,
-          ),
+          if (!book.isManga)
+            PopupMenuButton<ReaderLayout>(
+              tooltip: 'Layout',
+              icon: const Icon(Icons.view_compact_alt),
+              onSelected: (v) => setState(() => _layout = v),
+              itemBuilder: (_) => [
+                CheckedPopupMenuItem(
+                  value: ReaderLayout.sideBySide,
+                  checked: _layout == ReaderLayout.sideBySide,
+                  child: const Text('Side by Side'),
+                ),
+                CheckedPopupMenuItem(
+                  value: ReaderLayout.tabbed,
+                  checked: _layout == ReaderLayout.tabbed,
+                  child: const Text('Tabbed'),
+                ),
+              ],
+            ),
+          if (!book.isManga)
+            IconButton(
+              tooltip: 'Reader settings',
+              icon: const Icon(Icons.tune),
+              onPressed: _showSettings,
+            ),
         ],
       ),
       body: Column(
         children: [
           Expanded(
-            child: DualLanguageReader(
-              key: ValueKey('${book.id}_${_chapterIndex}_${_layout.name}'),
-              chapter: chapter,
-              layout: _layout,
-              languageMode: _langMode,
-              fontSize: storage.fontSize,
-            ),
+            child: book.isManga
+                ? MangaReader(
+                    key: ValueKey('${book.id}_${_chapterIndex}_${_langMode.name}'),
+                    chapter: chapter,
+                    languageMode: _langMode,
+                  )
+                : DualLanguageReader(
+                    key: ValueKey('${book.id}_${_chapterIndex}_${_layout.name}'),
+                    chapter: chapter,
+                    layout: _layout,
+                    languageMode: _langMode,
+                    fontSize: storage.fontSize,
+                  ),
           ),
           _ChapterNavBar(
             chapter: _chapterIndex,
             total: book.chapters.length,
-            onPrev: _chapterIndex > 0
-                ? () => _setChapter(_chapterIndex - 1)
-                : null,
+            onPrev: _chapterIndex > 0 ? () => _setChapter(_chapterIndex - 1) : null,
             onNext: _chapterIndex < book.chapters.length - 1
                 ? () => _setChapter(_chapterIndex + 1)
                 : null,

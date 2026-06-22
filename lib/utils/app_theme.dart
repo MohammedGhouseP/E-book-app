@@ -47,11 +47,13 @@ class AppTheme {
         bodyColor: AppColors.inkBrown,
         displayColor: AppColors.darkMahogany,
       ),
-      cardTheme: CardTheme(
+      cardTheme: CardThemeData(
         color: AppColors.ivory,
         elevation: 4,
         shadowColor: AppColors.shelfShadow.withOpacity(0.4),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+        ),
       ),
       iconTheme: const IconThemeData(color: AppColors.mahogany),
       floatingActionButtonTheme: const FloatingActionButtonThemeData(
@@ -97,11 +99,13 @@ class AppTheme {
         bodyColor: AppColors.parchment,
         displayColor: AppColors.cream,
       ),
-      cardTheme: CardTheme(
+      cardTheme: CardThemeData(
         color: AppColors.nightSurface,
         elevation: 4,
         shadowColor: Colors.black,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+        ),
       ),
       iconTheme: const IconThemeData(color: AppColors.gold),
       floatingActionButtonTheme: const FloatingActionButtonThemeData(

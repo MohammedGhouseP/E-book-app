@@ -6,6 +6,7 @@ import '../utils/library_storage.dart';
 import 'shelf_screen.dart';
 import 'book_list_screen.dart';
 import 'book_reader_screen.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -212,6 +213,18 @@ class _ContinueReading extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final storage = context.watch<LibraryStorage>();
+    
+    // Explicitly listen to the ThemeProvider so the horizontal list updates instantly
+    final themeProvider = context.watch<ThemeProvider>();
+    final isLight = !themeProvider.isDark;
+    
+    // Explicitly calculate high-contrast colors
+    final cardColor = isLight ? AppColors.ivory : AppColors.nightSurface;
+    final textColor = isLight ? AppColors.darkMahogany : AppColors.cream;
+    final subtitleColor = isLight 
+        ? AppColors.inkBrown.withOpacity(0.8) 
+        : AppColors.parchment.withOpacity(0.8);
+
     final inProgress = BooksData.allBooks
         .where((b) {
           final progress = storage.progressOf(b.id);
@@ -223,18 +236,21 @@ class _ContinueReading extends StatelessWidget {
       return Container(
         padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
-          color: Theme.of(context).cardTheme.color,
+          color: cardColor,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(color: AppColors.deepGold.withOpacity(0.4)),
         ),
-        child: const Row(
+        child: Row(
           children: [
-            Icon(Icons.menu_book, color: AppColors.deepGold),
-            SizedBox(width: 12),
+            const Icon(Icons.menu_book, color: AppColors.deepGold),
+            const SizedBox(width: 12),
             Expanded(
               child: Text(
                 'Pick a book from the shelves to start reading.',
-                style: TextStyle(fontStyle: FontStyle.italic),
+                style: TextStyle(
+                  fontStyle: FontStyle.italic,
+                  color: subtitleColor,
+                ),
               ),
             ),
           ],
@@ -262,7 +278,7 @@ class _ContinueReading extends StatelessWidget {
               width: 240,
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: Theme.of(context).cardTheme.color,
+                color: cardColor,
                 borderRadius: BorderRadius.circular(10),
                 border: Border.all(color: AppColors.deepGold.withOpacity(0.5)),
               ),
@@ -290,9 +306,10 @@ class _ContinueReading extends StatelessWidget {
                           book.title,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontWeight: FontWeight.w700,
                             fontSize: 14,
+                            color: textColor,
                           ),
                         ),
                         const SizedBox(height: 4),
@@ -300,9 +317,10 @@ class _ContinueReading extends StatelessWidget {
                           book.author,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 12,
                             fontStyle: FontStyle.italic,
+                            color: subtitleColor,
                           ),
                         ),
                         const SizedBox(height: 8),
@@ -341,6 +359,12 @@ class _ContinueReading extends StatelessWidget {
 class _FeaturedBooks extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
+    final themeProvider = context.watch<ThemeProvider>();
+    final isLight = !themeProvider.isDark;
+    
+    final cardColor = isLight ? AppColors.ivory : AppColors.nightSurface;
+    final textColor = isLight ? AppColors.darkMahogany : AppColors.cream;
+
     final featured = BooksData.allBooks.take(6).toList(growable: false);
     return SizedBox(
       height: 200,
@@ -351,6 +375,8 @@ class _FeaturedBooks extends StatelessWidget {
         itemBuilder: (context, i) {
           final book = featured[i];
           final shelf = BooksData.shelfById(book.shelfId);
+          final isNetwork = book.coverImage.startsWith('http');
+
           return InkWell(
             onTap: () => Navigator.of(context).push(
               MaterialPageRoute(
@@ -364,7 +390,7 @@ class _FeaturedBooks extends StatelessWidget {
               width: 130,
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(10),
-                color: Theme.of(context).cardTheme.color,
+                color: cardColor,
                 border: Border.all(color: AppColors.deepGold.withOpacity(0.4)),
                 boxShadow: [
                   BoxShadow(
@@ -381,21 +407,17 @@ class _FeaturedBooks extends StatelessWidget {
                     child: ClipRRect(
                       borderRadius: const BorderRadius.vertical(
                           top: Radius.circular(10)),
-                      child: Image.asset(
-                        book.coverImage,
-                        fit: BoxFit.cover,
-                        errorBuilder: (_, __, ___) => Container(
-                          decoration: const BoxDecoration(
-                            gradient: LinearGradient(
-                              colors: [AppColors.wood, AppColors.darkMahogany],
-                            ),
+                      child: isNetwork 
+                        ? CachedNetworkImage(
+                            imageUrl: book.coverImage,
+                            fit: BoxFit.cover,
+                            errorWidget: (_, __, ___) => _errorCover(),
+                          )
+                        : Image.asset(
+                            book.coverImage,
+                            fit: BoxFit.cover,
+                            errorBuilder: (_, __, ___) => _errorCover(),
                           ),
-                          child: const Center(
-                            child: Icon(Icons.menu_book,
-                                color: AppColors.gold, size: 36),
-                          ),
-                        ),
-                      ),
                     ),
                   ),
                   Padding(
@@ -404,9 +426,10 @@ class _FeaturedBooks extends StatelessWidget {
                       book.title,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 13,
                         fontWeight: FontWeight.w600,
+                        color: textColor,
                       ),
                     ),
                   ),
@@ -415,6 +438,19 @@ class _FeaturedBooks extends StatelessWidget {
             ),
           );
         },
+      ),
+    );
+  }
+
+  Widget _errorCover() {
+    return Container(
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          colors: [AppColors.wood, AppColors.darkMahogany],
+        ),
+      ),
+      child: const Center(
+        child: Icon(Icons.menu_book, color: AppColors.gold, size: 36),
       ),
     );
   }

@@ -4,7 +4,7 @@ import '../models/shelf_model.dart';
 
 class BooksData {
   static final List<Shelf> shelves = [
-    Shelf(
+    const Shelf(
       id: 'fiction',
       name: 'Fiction',
       icon: Icons.auto_stories,
@@ -17,7 +17,7 @@ class BooksData {
           description:
               'A quiet tale of a village living beside a river that holds many secrets.',
           shelfId: 'fiction',
-          chapters: const [
+          chapters: [
             Chapter(
               title: 'Chapter 1 — Morning Mist',
               englishText:
@@ -42,7 +42,7 @@ class BooksData {
           description:
               'A young woman writes home from a city she barely understands.',
           shelfId: 'fiction',
-          chapters: const [
+          chapters: [
             Chapter(
               title: 'Letter One',
               englishText:
@@ -54,7 +54,7 @@ class BooksData {
         ),
       ],
     ),
-    Shelf(
+    const Shelf(
       id: 'islamic',
       name: 'Islamic',
       icon: Icons.mosque,
@@ -67,7 +67,7 @@ class BooksData {
           description:
               'A reflection on the 99 names of Allah and their meanings in daily life.',
           shelfId: 'islamic',
-          chapters: const [
+          chapters: [
             Chapter(
               title: 'Ar-Rahman — The Most Merciful',
               englishText:
@@ -77,9 +77,32 @@ class BooksData {
             ),
           ],
         ),
-      ],
+        // ---> HERE IS YOUR NEW S3 IMAGE BOOK <---
+        Book(
+          id: 'makhraj_guide',
+          title: 'Makhraj Guide',
+          author: 'Unknown',
+          // Corrected bucket name in the URL
+          coverImage: 'https://ebook-app-assets-375546531181-ap-south-1-an.s3.ap-south-1.amazonaws.com/Untitled-2%20copy_1.jpg', 
+          description: 'Learn the articulation points.',
+          shelfId: 'islamic',
+          isManga: true, 
+          chapters: [
+            Chapter(
+              title: 'Makhraj No-15',
+              englishPageUrls: [
+                // Corrected bucket name in the URL
+                'https://ebook-app-assets-375546531181-ap-south-1-an.s3.ap-south-1.amazonaws.com/ep22%20copy.jpg',
+              ],
+              urduPageUrls: [
+                // Corrected bucket name in the URL
+                'https://ebook-app-assets-375546531181-ap-south-1-an.s3.ap-south-1.amazonaws.com/up22%20copy.jpg',
+              ],
+            ),
+          ],
+        ),],
     ),
-    Shelf(
+    const Shelf(
       id: 'children',
       name: "Children's",
       icon: Icons.child_friendly,
@@ -92,7 +115,7 @@ class BooksData {
           description:
               'A small bird with a big heart sets out on a journey across the garden.',
           shelfId: 'children',
-          chapters: const [
+          chapters: [
             Chapter(
               title: 'A New Friend',
               englishText:
@@ -104,7 +127,7 @@ class BooksData {
         ),
       ],
     ),
-    Shelf(
+    const Shelf(
       id: 'poetry',
       name: 'Poetry',
       icon: Icons.format_quote,
@@ -116,7 +139,7 @@ class BooksData {
           coverImage: 'assets/books/whispers_garden.jpg',
           description: 'A collection of short verses inspired by gardens and seasons.',
           shelfId: 'poetry',
-          chapters: const [
+          chapters: [
             Chapter(
               title: 'Spring',
               englishText:
